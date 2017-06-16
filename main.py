@@ -95,9 +95,9 @@ class PDFgenerator(object):
         self.mission = mission
         self.fields = {
             "Date": {'x': 110, 'y': 700, 'value': str(self.mission.date_long)},
-            "Squadron": {'x': 135, 'y': 677, 'value': str(Config().get()['Default']['squadron'][:3] + '-' +
-                                                          Config().get()['Default']['squadron'][3:])},
-            "ACFT Number": {'x': 137, 'y': 629, 'value': str(self.mission.buno)},
+            "Sqd": {'x': 135, 'y': 677, 'value': str(Config().get()['Default']['sqd'][:3] + '-' +
+                                                          Config().get()['Default']['sqd'][3:])},
+            "A/N": {'x': 137, 'y': 629, 'value': str(self.mission.buno)},
             "Length": {'x': 172, 'y': 584, 'value': str("{0:.1f}".format(float(self.mission.length)))},
             "AOR": {'x': 182, 'y': 561, 'value': str(Config().get()['Default']['AOR'])},
             "AEFs": {'x': 108, 'y': 536, 'value': str(self.mission.total_aefs)}
@@ -128,77 +128,12 @@ class PDFgenerator(object):
 
 
 class PostgresqlDatabase(object):
-    # Used for creating Data table
-    field_type_string = '''ID int, sequence_id int, mdb_id int, report_no int, manual_report_no int,
-        exc_from_analysis_flag int,ff_code varchar, band_no int, utc_time_stamp_usec timestamp without time zone,
-        aef_index int, beam_index int, emitter_quality int2, tds_visible_flag int, report_update_type int2,
-        ra_report_flag int, indeterminate_flag int, unknown_flag int, hostile_flag int, friend_flag int,
-        platform_type int, location_status int, azimuth_type int, location_type int, azimuth_true_bearing_deg float8,
-        azimuth_tolerance float8, elevation_type int, elevation_angle float8, elevation_angle_tolerance float8,
-        lat_deg float8, lon_deg float8, ellipse_smajor_nm float8, ellipse_sminor_nm float8,
-        ellipse_orientation_deg float8, range_emitter_nm float8, complex_emitter_flag int,
-        classification_best_fit_avail int, classification_status int, classification_type int,
-        classification_candidate_count int, emitter_beam_count int, jammer_tag int, harm_tag int, save_flag int,
-        saved_by_operator_flag int, frequency_type int, freq_modulation_type int, freq_mhz float8, freq_min_mhz float8,
-        freq_max_mhz float8, fm_excursion int, pw_usec float8, intra_pulse_ph_reversal_count int,
-        current_amplitude int2, max_amplitude float8, pri_type int, pri_fri_precision_pri float8,
-        pri_fri_deviation_window float8, stagger_levels_count int2, scan_type varchar, scan_rate_valid_flag int,
-        scan_rate float8, alt_level_valid_flag int, alt_Level float8, ba_lat_long_valid_flag int, ba_latitude float8,
-        ba_longitude float8, ba_trueHeading_angle float8, TrueHeading_valid_flag int, true_airspeed_valid_flag int,
-        ba_true_airspeed float8, true_aoa_valid_flag int, true_aoa float8, pri_1 float8, pri_2 float8, pri_3 float8,
-        pri_4 float8, pri_5 float8, pri_6 float8, pri_7 float8, pri_8 float8, pri_9 float8, pri_10 float8,
-        pri_11 float8, pri_12 float8, pri_13 float8, pri_14 float8, pri_15 float8, pri_16 float8, emitter_name1 varchar,
-        em_md_bm1 varchar, emitter_name2 varchar, em_md_bm2 varchar, emitter_name3 varchar, em_md_bm3 varchar,
-        emitter_name4 varchar, em_md_bm4 varchar, emitter_name5 varchar, em_md_bm5 varchar, emitter_name6 varchar,
-        em_md_bm6 varchar, emitter_name7 varchar, em_md_bm7 varchar, emitter_name8 varchar, em_md_bm8 varchar,
-        emitter_name9 varchar, em_md_bm9 varchar, emitter_name10 varchar, em_md_bm10 varchar, emitter_name11 varchar,
-        em_md_bm11 varchar, emitter_name12 varchar, em_md_bm12 varchar, emitter_name13 varchar, em_md_bm13 varchar,
-        emitter_name14 varchar, em_md_bm14 varchar, emitter_name15 varchar, em_md_bm15 varchar, emitter_name16 varchar,
-        em_md_bm16 varchar, AEAInternalStatus varchar, pw_type int, msg_type varchar, selected_enhanced_geo_active int,
-        achvd_enhncd_geo_threshold int, ACFT_Bureau_Num int, BearingDist varchar, Coll_ID varchar, ELNOT varchar'''
-
-    # Used for inserting data into table
-    field_input_string = '''ID, sequence_id, mdb_id, report_no, manual_report_no,
-        exc_from_analysis_flag,ff_code, band_no, utc_time_stamp_usec,
-        aef_index, beam_index, emitter_quality, tds_visible_flag, report_update_type,
-        ra_report_flag, indeterminate_flag, unknown_flag, hostile_flag, friend_flag, platform_type,
-        location_status, azimuth_type, location_type, azimuth_true_bearing_deg, azimuth_tolerance,
-        elevation_type, elevation_angle, elevation_angle_tolerance, lat_deg, lon_deg,
-        ellipse_smajor_nm, ellipse_sminor_nm, ellipse_orientation_deg, range_emitter_nm,
-        complex_emitter_flag, classification_best_fit_avail, classification_status, classification_type,
-        classification_candidate_count, emitter_beam_count, jammer_tag, harm_tag, save_flag,
-        saved_by_operator_flag, frequency_type, freq_modulation_type, freq_mhz, freq_min_mhz,
-        freq_max_mhz, fm_excursion, pw_usec, intra_pulse_ph_reversal_count, current_amplitude,
-        max_amplitude, pri_type, pri_fri_precision_pri, pri_fri_deviation_window,
-        stagger_levels_count, scan_type, scan_rate_valid_flag, scan_rate,
-        alt_level_valid_flag, alt_Level, ba_lat_long_valid_flag, ba_latitude, ba_longitude,
-        ba_trueHeading_angle, TrueHeading_valid_flag, true_airspeed_valid_flag, ba_true_airspeed,
-        true_aoa_valid_flag, true_aoa, pri_1, pri_2, pri_3, pri_4,
-        pri_5, pri_6, pri_7, pri_8, pri_9, pri_10, pri_11,
-        pri_12, pri_13, pri_14, pri_15, pri_16, emitter_name1,
-        em_md_bm1, emitter_name2, em_md_bm2, emitter_name3, em_md_bm3,
-        emitter_name4, em_md_bm4, emitter_name5, em_md_bm5, emitter_name6,
-        em_md_bm6, emitter_name7, em_md_bm7, emitter_name8, em_md_bm8,
-        emitter_name9, em_md_bm9, emitter_name10, em_md_bm10, emitter_name11,
-        em_md_bm11, emitter_name12, em_md_bm12, emitter_name13, em_md_bm13,
-        emitter_name14, em_md_bm14, emitter_name15, em_md_bm15, emitter_name16,
-        em_md_bm16, AEAInternalStatus, pw_type, msg_type, selected_enhanced_geo_active,
-        achvd_enhncd_geo_threshold, ACFT_Bureau_Num, BearingDist, Coll_ID, ELNOT'''
-
-    # Used for creating EOB table
-    eob_type_string = '''emitter_key varchar, country_code varchar, Allegiance varchar, latitude float8,
-    longitude float8, equip_code varchar, midb_name text, be_number varchar, fac_unit_name text,
-    mod_date timestamp without time zone'''
-
-    # Used for inserting data into EOB table
-    eob_field_string = '''emitter_key, country_code, Allegiance, latitude, longitude, equip_code, midb_name, be_number,
-    fac_unit_name, mod_date'''
-
-    # Used for creating elnot table
-    elnot_type_string = '''emitter_key varchar, elnot varchar'''
-
-    # Used for inserting elnot data
-    elnot_input_string = '''emitter_key, elnot'''
+    field_type_string = '''...'''  #  Data types, formats, and precisions are proprietary. 
+    field_input_string = '''...'''  #  Data types, formats, and precisions are proprietary. 
+    eob_type_string = '''...'''  #  Data types, formats, and precisions are proprietary. 
+    eob_field_string = '''...'''  #  Data types, formats, and precisions are proprietary. 
+    elnot_type_string = '''...'''  #  Data types, formats, and precisions are proprietary. 
+    elnot_input_string = '''...'''  #  Data types, formats, and precisions are proprietary. 
 
     def __init__(self, tablename):
         super(PostgresqlDatabase, self).__init__()
@@ -259,7 +194,7 @@ class PostgresqlDatabase(object):
     def connection(self):
         if self.validate_connection():
             conn = psycopg2.connect(
-                "dbname='aea' user='gale' host='{}' password='GALEdatabase01!!'".format(self.server))
+                "dbname='db' user='user' host='{}' password='password'".format(self.server))
             cur = conn.cursor()
 
             if self.validate_table(conn, cur):
@@ -271,7 +206,7 @@ class PostgresqlDatabase(object):
         else:
             self.create_database()
             conn = psycopg2.connect(
-                "dbname='aea' user='gale' host='{}' password='GALEdatabase01!!'".format(self.server))
+                "dbname='db' user='user' host='{}' password='password'".format(self.server))
             cur = conn.cursor()
             self.create_table(conn, cur)
             return conn, cur
@@ -322,19 +257,19 @@ class PostgresqlDatabase(object):
         return self.cur.fetchall()
 
     def delete_duplicates(self):
-        self.cur.execute("DELETE FROM aea_aef_data_table "
+        self.cur.execute("DELETE FROM table "
                          "WHERE Key IN (SELECT Key "
                          "FROM (SELECT Key, "
-                         "ROW_NUMBER() OVER (partition BY ID, utc_time_stamp_usec, report_no, freq_mhz, pw_usec "
+                         "ROW_NUMBER() OVER (partition BY ID, time_stamp, report_no, param_1, param_2 "
                          "ORDER BY ID) AS rnum "
-                         "FROM aea_aef_data_table) t "
+                         "FROM table) t "
                          "WHERE t.rnum > 1);")
         self.conn.commit()
 
     def validate_connection(self):
         try:
             conn = psycopg2.connect(
-                "dbname='aea' user='gale' host='{}' password='GALEdatabase01!!'".format(self.server))
+                "dbname='db' user='user' host='{}' password='password'".format(self.server))
             conn.close()
             return True
 
@@ -352,11 +287,11 @@ class PostgresqlDatabase(object):
 
     def create_database(self):
         conn = psycopg2.connect(
-            "dbname='postgres' user='gale' host='{}' password='GALEdatabase01!!'".format(self.server))
+            "dbname='db' user='user' host='{}' password='password'".format(self.server))
         from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
         conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
         cur = conn.cursor()
-        cur.execute("CREATE DATABASE aea")
+        cur.execute("CREATE DATABASE db")
         cur.close()
         conn.close()
 
@@ -379,81 +314,9 @@ class PostgresqlDatabase(object):
 
 class Config(object):
     files = {
-        'AEA_DB.connection': """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-    <gale:DatabaseSpecification xmlns:gale="urn:com:ngc:gale:infrastructure:configuration:specification:generated" xmlns:ns2="urn:com:ngc:gale:infrastructure:configuration:specification:generated:data" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" gale:Name="AEA_DB" gale:Vendor="PostGres" xsi:schemaLocation="urn:com:ngc:gale:infrastructure:configuration:specification:generated file:///C:/Program%20Files%20(x86)/GALE/config/specification/Schema/DatabaseSpecification.xsd">
-        <gale:Comment>RDBMS connection information for a local postgres server</gale:Comment>
-        <gale:Driver>org.postgresql.Driver</gale:Driver>
-        <gale:Url>jdbc:postgresql://{}:5432/aea</gale:Url>
-        <gale:Provider>System.Data.Odbc</gale:Provider>
-        <gale:SecureCommunication>false</gale:SecureCommunication>
-        <gale:Property gale:Name="DataDefinitionConfiguration">AEA_DB</gale:Property>
-        <gale:Version>-1</gale:Version>
-        <gale:UseParallelHint>false</gale:UseParallelHint>
-        <gale:NumberOfDatabaseQueryThreadGroups>1</gale:NumberOfDatabaseQueryThreadGroups>
-        <gale:MaxConnectionPoolSize>50</gale:MaxConnectionPoolSize>
-    </gale:DatabaseSpecification>""",
-        'AEA_EOB.connection': """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-    <gale:DatabaseSpecification xmlns:gale="urn:com:ngc:gale:infrastructure:configuration:specification:generated" xmlns:ns2="urn:com:ngc:gale:infrastructure:configuration:specification:generated:data" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" gale:Name="AEA_EOB" gale:Vendor="PostGres" xsi:schemaLocation="urn:com:ngc:gale:infrastructure:configuration:specification:generated file:///C:/Program%20Files%20(x86)/GALE/config/specification/Schema/DatabaseSpecification.xsd">
-        <gale:Comment>RDBMS connection information for a local postgres server</gale:Comment>
-        <gale:Driver>org.postgresql.Driver</gale:Driver>
-        <gale:Url>jdbc:postgresql://{}:5432/aea</gale:Url>
-        <gale:Provider>System.Data.Odbc</gale:Provider>
-        <gale:SecureCommunication>false</gale:SecureCommunication>
-        <gale:Property gale:Name="DataDefinitionConfiguration">AEA_EOB</gale:Property>
-        <gale:Version>-1</gale:Version>
-        <gale:UseParallelHint>false</gale:UseParallelHint>
-        <gale:NumberOfDatabaseQueryThreadGroups>1</gale:NumberOfDatabaseQueryThreadGroups>
-        <gale:MaxConnectionPoolSize>50</gale:MaxConnectionPoolSize>
-    </gale:DatabaseSpecification>""",
-        'AEA.connection': """<?xml version="1.0" encoding="UTF-8"?>
-    <!-- ************************** CLASSIFICATION ******************************
-    *                                                                          *
-    *                               SECRET                               *
-    *                                                                          *
-    ************************************************************************ -->
-    <!-- **************************** COPYRIGHT *********************************
-    # Copyright (c) (2015-2016) by the U.S. Defense Intelligence Agency (DIA)
-    #
-    # The Department of Defense has unlimited rights in this computer software and
-    # it may be reproduced by and for the Department of Defense has pursuant to the
-    # copyright license under the clause at DFARS 252.227.7013 (October 1988).
-    ************************************************************************ -->
-    <!-- ***************************** PREFACE **********************************
-    *
-    * File Name: PostgresExample.connection.xml
-    *
-    * Purpose: PostGres rdbms connection information
-    *
-    * Revision History:
-    *
-    * Name           Date         DR      Description
-    * Blakely        Jan, 09 2007         initial creation
-    * jcasler	 Feb, 16 2009	WI5705	Removed DSN information
-    * zberk          Feb 24, 2014      WI28321    Changed classification/header info.
-    * nxavier	  July 18. 2014   WI29094  Updated version number to be set to the
-     *															current GALE version (5.3.1)
-    * nxavier    Aug 19, 2014   WI29408  Changed default port for the WS to 8413
-     * nxavier    Sep  9, 2014    WI29568  Changed default port for the WS to 443
-     * zberk		Dec 22, 2014	WI30276	Updated version number.
-     * gfox  	  Jun 12, 2015   WI31457 Updated version number to be set to the
-     *															current GALE version (5.3.2)
-     * MYSmith  22 APR 2016  GALE-387  Update version number to 5.4.0.0
-     * BKane    20 Dec 2016  GALE-334  Update version # and fix implied tags
-    * Notes:
-    *
-    ************************************************************************ -->
-    <gale:DatabaseSpecification xmlns:gale="urn:com:ngc:gale:infrastructure:configuration:specification:generated" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="urn:com:ngc:gale:infrastructure:configuration:specification:generated ../Schema/DatabaseSpecification.xsd" gale:Name="AEA"gale:Vendor="PostGres">
-        <gale:Comment>RDBMS connection information for a local postgres server</gale:Comment>
-        <gale:Driver>org.postgresql.Driver</gale:Driver>
-        <gale:Url>jdbc:postgresql://{}:5432/aea</gale:Url>
-        <gale:Provider>System.Data.Odbc</gale:Provider>
-        <gale:SecureCommunication>false</gale:SecureCommunication>
-        <gale:Property gale:Name="DataDefinitionConfiguration">MEPDatabase</gale:Property>
-        <gale:Version>5.4.2.0</gale:Version>
-    <gale:UseParallelHint>false</gale:UseParallelHint>
-    <gale:NumberOfDatabaseQueryThreadGroups>1</gale:NumberOfDatabaseQueryThreadGroups>
-    <gale:MaxConnectionPoolSize>50</gale:MaxConnectionPoolSize>
-    </gale:DatabaseSpecification>"""
+        'DB.connection': """Doc String Containing XML""",
+        'DB2.connection': """Doc String Containing XML""",
+        'DB3.connection': """Doc String Containing XML"""
     }
 
     def __init__(self):
@@ -463,11 +326,11 @@ class Config(object):
     def save(self, section, item, val):
         self.config[section][item] = val
 
-        with open('C:\EWDS-DIA\config\ADIT.ini', 'w') as configfile:
+        with open('C:\path\to\config.ini', 'w') as configfile:
             self.config.write(configfile)
 
     def load(self):
-        self.config.read('C:\EWDS-DIA\config\ADIT.ini')
+        self.config.read('C:\path\to\config.ini')
 
     def get(self):
         return self.config
@@ -486,22 +349,22 @@ class Config(object):
     def update_server(self):
         conn = self.get()['Default']['server']
         for k, v in Config.files.items():
-            if k.split(".")[0] == 'AEA':
+            if k.split(".")[0] == 'DB':
                 a = k + ".xml"
-                b = r"C:\Program Files (x86)\GALE\config\specification\DatabaseConnection"
-                c = r"D:\GALE\config\specification\DatabaseConnection"
+                b = r"C:\path\to\directory1"
+                c = r"D:\path\to\directory2"
                 self.write_files(a, b if os.path.isdir(b) else c, v.format(conn))
-            elif k.split(".")[0] == 'AEA_DB':
+            elif k.split(".")[0] == 'DB2':
                 a = k + ".xml"
-                b = r"C:\Users\{}\AppData\Local\GALE_Application\config\specification\DatabaseConnection".format(
+                b = r"C:\Users\{}\AppData\Local\".format(
                     str(getpass.getuser()))
-                c = r"C:\GALEData\config\specification\DatabaseConnection"
+                c = r"C:\path\to\alternate\directory"
                 self.write_files(a, b if os.path.isdir(b) else c, v.format(conn))
             else:
                 a = k + ".xml"
-                b = r"C:\Users\{}\AppData\Local\GALE_Application\config\specification\DatabaseConnection".format(
+                b = r"C:\Users\{}\AppData\Local\".format(
                     getpass.getuser())
-                c = r"C:\GALEData\config\specification\DatabaseConnection"
+                c = r"C:\path\to\alternate\directory"
                 self.write_files(a, b if os.path.isdir(b) else c, v.format(conn))
 
 
@@ -557,7 +420,7 @@ class FileDialogs(object):
 
             else:
                 if (any(['.mdb' in x for x in file]) or any(['.accdb' in y for y in file])) and all(
-                        ['EWDS' and 'Lite' in z for z in file]) and len(file) > 1:
+                        ['Other' and 'Type' in z for z in file]) and len(file) > 1:
                     Handler.show_error("EOB Error!", "Cannot Select More Than 1 EOB Files at a Time.")
 
                 elif self.check_types(file):
@@ -617,7 +480,7 @@ class TempDir(object):
 
 class Data(object):
     """
-    Data is a container class for VAQ/VMAQ post-flight ESM mission data.
+    Data is a container class for mission data.
 
     Input:
     -----------
@@ -678,11 +541,11 @@ class Data(object):
         self.construct_lookup()
 
     def construct_lookup(self):
-        db = PostgresqlDatabase('emitter_elnot')
+        db = PostgresqlDatabase('table')
         if not db.connected:
             self.valid = False
             return
-        table = [next(iter(b)) for b in db.get("SELECT emitter_key from emitter_elnot")]
+        table = [next(iter(b)) for b in db.get("SELECT key from table")]
         keys = []
         for x in table:
             if x not in keys:
@@ -691,7 +554,7 @@ class Data(object):
         mapping = []
         for key in keys:
             elnots = [next(iter(v)) for v in
-                      db.get("SELECT elnot from emitter_elnot WHERE emitter_key='{}'".format(key))]
+                      db.get("SELECT field from table WHERE key='{}'".format(key))]
             if len(elnots) == 1:
                 mapping.append((key, elnots[0]))
             elif sum([elnots[0][:4] in x for x in elnots]) == 1 and len([elnots[0][:4] in x for x in elnots]) == 2:
@@ -699,7 +562,7 @@ class Data(object):
             elif sum([elnots[1][:4] in x for x in elnots]) > 1:
                 mapping.append((key, elnots[1][:4] + 'Y'))
             else:
-                mapping.append((key, 'N407A'))
+                mapping.append((key, 'Invalid'))
 
         for reference in mapping:
             self.map[reference[0]] = reference[1]
@@ -722,7 +585,7 @@ class Data(object):
                                                                                                   self.mimetype]) + ';')
                       )
             rs = win32com.client.Dispatch(r'ADODB.Recordset')
-            rs.Open("SELECT * FROM aea_aef_report_data", conn, 1, 3)
+            rs.Open("SELECT * FROM table", conn, 1, 3)
             initial = True
             while not rs.EOF:
                 lines = pool.map(self.format_data, [line for line in zip(*rs.GetRows(100, 0))])
@@ -849,7 +712,7 @@ class Data(object):
                 self.valid = False
                 return
             rs = win32com.client.Dispatch(r'ADODB.Recordset')
-            rs.Open("SELECT * FROM aea_aef_report_data", conn, 1, 3)
+            rs.Open("SELECT * FROM table", conn, 1, 3)
 
             while not rs.EOF:
                 self.count += 1
@@ -883,14 +746,14 @@ class Data(object):
             self.total_aefs = len(aefs)
             rs.Close()
             try:
-                rs.Open("SELECT * FROM eau_dx_archive_file_header", conn, 1, 3)
+                rs.Open("SELECT * FROM table2", conn, 1, 3)
                 self.buno = [str(next(iter(x))) for x in rs.GetRows(1, 0)][5]
                 rs.Close()
             except pywintypes.com_error:
                 self.buno = 999999
             date = ''
             try:
-                rs.Open("SELECT * FROM utc_month_day_ext", conn, 1, 3)
+                rs.Open("SELECT * FROM table3", conn, 1, 3)
                 data = [str(next(iter(x))) for x in rs.GetRows(1, 0)]
                 row = [data[2]] + data[4:]
                 date = datetime.datetime.strptime(" ".join(row), '%y %m %d')
@@ -937,17 +800,17 @@ class Data(object):
                   }
 
         if any(row[88] == x for x in [None, 'None', '']):
-            return 'L0000'
+            return 'UNK'
 
-        if row[88].strip() == "NAV3GHZ":
+        if row[88].strip() == "N3G":
             rf = 3
-        elif row[88].strip() == "NAV9GHZ":
+        elif row[88].strip() == "N9G":
             rf = 9
         else:
             try:
                 return self.map[row[88].rstrip()]
             except KeyError:
-                return 'L0000'
+                return 'UNK'
 
         pris = [float(x) / 1000 for x in row[72:88] if float(x) > 0]
         stable = False if len(pris) > 1 else True
@@ -960,7 +823,7 @@ class Data(object):
                     pri = 0
 
         if pri == 0:
-            return 'L0000'
+            return 'UNK'
         else:
             if not stable:
                 pri += 5
@@ -982,7 +845,7 @@ class EOB(object):
 
     Input:
     -----------
-    EOB(file):         where file is the path to the EWDS Lite database for import. Can be a (.zip) containing database.
+    EOB(file):         where file is the path to the database for import. Can be a (.zip) containing database.
 
     Methods:
     -----------
@@ -1017,8 +880,6 @@ class EOB(object):
         self.prep_file()
         self.check_eob_date()
         self.create_count()
-        # PostgresqlDatabase('aea_eob_data_table').upload(self.data)
-        # PostgresqlDatabase('emitter_elnot').upload(self.emitter)
 
     def prep_file(self):
         if self.file.endswith('.zip'):
@@ -1048,14 +909,14 @@ class EOB(object):
 
     def create_count(self):
         rs = win32com.client.Dispatch(r'ADODB.Recordset')
-        rs.Open("SELECT * FROM emitter_location", self.conn, 1, 3)
+        rs.Open("SELECT * FROM table2", self.conn, 1, 3)
         while not rs.EOF:
             self.location_count += 1
             rs.MoveNext()
         rs.Close()
 
         rs = win32com.client.Dispatch(r'ADODB.Recordset')
-        rs.Open("SELECT * FROM emitter_elnot", self.conn, 1, 3)
+        rs.Open("SELECT * FROM table3", self.conn, 1, 3)
         while not rs.EOF:
             self.elnot_count += 1
             rs.MoveNext()
@@ -1064,7 +925,7 @@ class EOB(object):
     def read(self, table):
         rs = win32com.client.Dispatch(r'ADODB.Recordset')
         rs.Open("SELECT * FROM {}".format(table), self.conn, 1, 3)
-        if table == 'emitter_location':
+        if table == 'table3':
             while not rs.EOF:
                 yield self.format_data([list(line).copy() for line in zip(*rs.GetRows(100, 0))])
             rs.Close()
@@ -1099,8 +960,8 @@ class EOB(object):
     def import_data(self):
         with StringIO() as outfile:
             with tqdm(total=self.location_count, file=outfile, desc='Updating Location Data ') as tq:
-                rows = self.read('emitter_location')
-                db = PostgresqlDatabase('aea_eob_data_table')
+                rows = self.read('field1')
+                db = PostgresqlDatabase('table2')
                 while rows:
                     try:
                         db.upload(next(rows))
@@ -1114,8 +975,8 @@ class EOB(object):
 
         with StringIO() as outfile:
             with tqdm(total=self.elnot_count, file=outfile, desc='Updating Emitter Map Data ') as tq:
-                rows = self.read('emitter_elnot')
-                db = PostgresqlDatabase('emitter_elnot')
+                rows = self.read('table3')
+                db = PostgresqlDatabase('table3')
                 while rows:
                     try:
                         db.upload(next(rows))
@@ -1157,16 +1018,16 @@ class DatabaseMaintenance(object):
     def check_pgpass(self):
         if os.path.isfile("C:/Users/{}/AppData/Roaming/postgresql/pgpass.conf".format(getpass.getuser())):
             with open("C:/Users/{}/AppData/Roaming/postgresql/pgpass.conf".format(getpass.getuser()), "w+") as file:
-                file.write("{}:5432:*:postgres:P057GR35QLsuper!!".format(Config().get()['Default']['server']))
+                file.write("{}:5432:*:superuser:password".format(Config().get()['Default']['server']))
         else:
             os.mkdir("C:/Users/{}/AppData/Roaming/postgresql".format(getpass.getuser()))
             with open("C:/Users/{}/AppData/Roaming/postgresql/pgpass.conf".format(getpass.getuser()), "w+") as file:
-                file.write("{}:5432:*:postgres:P057GR35QLsuper!!".format(Config().get()['Default']['server']))
+                file.write("{}:5432:*:superuser:password".format(Config().get()['Default']['server']))
 
     def dump(self, name_date, dir_=None):
-        string = '"C:/Program Files/PostgreSQL/9.5/bin/pg_dump" -U postgres -h {} aea > "{}"' if os.path.isfile(
+        string = '"C:/Program Files/PostgreSQL/9.5/bin/pg_dump" -U superuser -h {} db > "{}"' if os.path.isfile(
             r"C:/Program Files/PostgreSQL/9.5/bin/pg_dump") else \
-            '"C:/EWDS-DIA/bin/pg_dump" -U postgres -h {} aea > "{}"'
+            '"C:/path/to/alternate/bin/pg_dump" -U superuser -h {} db > "{}"'
 
         process = subprocess.Popen(string.format(Config().get()['Default']['server'], os.path.join(
             Config().get()['Default']['DatabaseDirectory'], name_date) if dir_ is None else
@@ -1191,7 +1052,7 @@ class DatabaseMaintenance(object):
         if not ret:
             if not any([x.endswith("Backup.sql") for x in os.listdir(Config().get()['Default']['DatabaseDirectory'])]):
                 name_date = datetime.date.today().strftime("%Y-%m-%d")
-                name_date = "GALE Database {} Backup.sql".format(name_date)
+                name_date = "Database {} Backup.sql".format(name_date)
                 self.dump(name_date)
             else:
                 for x in os.listdir(Config().get()['Default']['DatabaseDirectory']):
@@ -1199,11 +1060,11 @@ class DatabaseMaintenance(object):
                         self.dump(x)
                         os.rename(os.path.join(Config().get()['Default']['DatabaseDirectory'], x),
                                   os.path.join(Config().get()['Default']['DatabaseDirectory'],
-                                               "GALE Database {} Backup.sql".format(
+                                               "Database {} Backup.sql".format(
                                                    datetime.date.today().strftime("%Y-%m-%d"))))
         else:
             name_date = datetime.date.today().strftime("%Y-%m-%d")
-            name_date = "GALE Database {} Backup.sql".format(name_date)
+            name_date = "Database {} Backup.sql".format(name_date)
             self.dump(name_date, FileDialogs().directory())
 
     def restore(self):
@@ -1213,30 +1074,30 @@ class DatabaseMaintenance(object):
             return
 
         try:
-            conn = psycopg2.connect("dbname='postgres' user='gale' host='{}' password='GALEdatabase01!!'".format(
+            conn = psycopg2.connect("dbname='db' user='user' host='{}' password='password'".format(
                 Config().get()['Default']['server']))
             from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
             conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
             cur = conn.cursor()
-            cur.execute("CREATE DATABASE aea;")
+            cur.execute("CREATE DATABASE db;")
             cur.close()
             conn.close()
         except psycopg2.ProgrammingError:
-            conn = psycopg2.connect("dbname='postgres' user='gale' host='{}' password='GALEdatabase01!!'".format(
+            conn = psycopg2.connect("dbname='db' user='user' host='{}' password='password'".format(
                 Config().get()['Default']['server']))
             from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
             conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
             cur = conn.cursor()
-            cur.execute("DROP DATABASE aea;")
-            cur.execute("CREATE DATABASE aea;")
+            cur.execute("DROP DATABASE db;")
+            cur.execute("CREATE DATABASE db;")
             cur.close()
             conn.close()
 
         dir_ = FileDialogs().open({'filetypes': [('Database Backup Files', '.sql')]})[0]
 
-        string = '"C:/Program Files/PostgreSQL/9.5/bin/psql" -h {} aea postgres < "{}"' if os.path.isfile(
+        string = '"C:/Program Files/PostgreSQL/9.5/bin/psql" -h {} db superuser < "{}"' if os.path.isfile(
             r"C:/Program Files/PostgreSQL/9.5/bin/psql") else \
-            '"C:/EWDS-DIA/bin/psql" -h {} aea postgres < "{}"'
+            '"C:/path/to/alternate/bin/psql" -h {} db superuser < "{}"'
 
         process = subprocess.Popen(string.format(Config().get()['Default']['server'], dir_), stdin=subprocess.PIPE,
                                    stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
@@ -1245,7 +1106,7 @@ class DatabaseMaintenance(object):
         out = process.poll()
 
         while out == process.poll():
-            self.status.set("Restoring AEA database from {}...{}".format(dir_, str(next(spinner))))
+            self.status.set("Restoring database from {}...{}".format(dir_, str(next(spinner))))
 
         self.status.set("Database Restore Complete.")
         time.sleep(1)
@@ -1276,38 +1137,38 @@ class ConfigGui(object):
         self.files_dir = Entry(self.mainframe)
         self.db_dir = Entry(self.mainframe)
         self.server = Entry(self.mainframe)
-        self.squadron = Entry(self.mainframe)
-        self.callsign = Entry(self.mainframe)
+        self.sqd = Entry(self.mainframe)
+        self.cs = Entry(self.mainframe)
         self.aor = Entry(self.mainframe)
         self.configs = None
         self.construct()
         self.mainframe.mainloop()
 
     def construct(self):
-        self.mainframe.title('ADIT v{} Config Update'.format(Config().get()['Default']['version'] if
-                                                             os.path.isdir('C:\EWDS-DIA') else 'UNKNOWN'))
+        self.mainframe.title('Tool v{} Config Update'.format(Config().get()['Default']['version'] if
+                                                             os.path.isdir('C:\path\to\dir') else 'UNKNOWN'))
         # self.main.geometry("720x250")
         # self.main.resizable(False, False)
 
         l_files_dir = Label(self.mainframe, text="Default Files Directory: ")
         l_db_dir = Label(self.mainframe, text="Default DB Backup Directory: ")
         l_server = Label(self.mainframe, text="Server Domain Name / IP: ")
-        l_squadron = Label(self.mainframe, text="Squadron Number: ")
-        l_callsign = Label(self.mainframe, text="Default Callsign: ")
-        l_aor = Label(self.mainframe, text="Default AOR: ")
+        l_sqd = Label(self.mainframe, text="Number: ")
+        l_cs = Label(self.mainframe, text="CS: ")
+        l_aor = Label(self.mainframe, text="AOR: ")
 
-        labels = [l_files_dir, l_db_dir, l_server, l_squadron, l_callsign, l_aor]
+        labels = [l_files_dir, l_db_dir, l_server, l_sqd, l_cs, l_aor]
         for index, label in enumerate(labels):
             label.grid(row=index, column=0, columnspan=2, sticky='E')
 
         self.files_dir.insert(0, Config().get()['Default']['filesdirectory'])
         self.db_dir.insert(0, Config().get()['Default']['databasedirectory'])
         self.server.insert(0, Config().get()['Default']['server'])
-        self.squadron.insert(0, Config().get()['Default']['squadron'])
-        self.callsign.insert(0, Config().get()['Default']['callsign'])
+        self.sqd.insert(0, Config().get()['Default']['sqd'])
+        self.cs.insert(0, Config().get()['Default']['cs'])
         self.aor.insert(0, Config().get()['Default']['aor'])
 
-        self.configs = [self.files_dir, self.db_dir, self.server, self.squadron, self.callsign, self.aor]
+        self.configs = [self.files_dir, self.db_dir, self.server, self.sqd, self.cs, self.aor]
         for index, entry in enumerate(self.configs):
             entry.grid(row=index, column=2, columnspan=3, sticky='W')
 
@@ -1367,8 +1228,8 @@ class ConfigGui(object):
 
         Config().save('Default', 'filesdirectory', self.files_dir.get())
         Config().save('Default', 'databasedirectory', self.db_dir.get())
-        Config().save('Default', 'squadron', self.squadron.get())
-        Config().save('Default', 'callsign', self.callsign.get())
+        Config().save('Default', 'sqd', self.sqd.get())
+        Config().save('Default', 'cs', self.cs.get())
         Config().save('Default', 'aor', self.aor.get())
         Handler().info("Config Updated", "User Configuration Updated Successfully.")
 
@@ -1376,19 +1237,19 @@ class ConfigGui(object):
         self.files_dir.delete(0, 'end')
         self.db_dir.delete(0, 'end')
         self.server.delete(0, 'end')
-        self.squadron.delete(0, 'end')
-        self.callsign.delete(0, 'end')
+        self.sqd.delete(0, 'end')
+        self.cs.delete(0, 'end')
         self.aor.delete(0, 'end')
 
         self.files_dir.insert(0, Config().get()['Default']['filesdirectory'])
         self.db_dir.insert(0, Config().get()['Default']['databasedirectory'])
         self.server.insert(0, Config().get()['Default']['server'])
-        self.squadron.insert(0, Config().get()['Default']['squadron'])
-        self.callsign.insert(0, Config().get()['Default']['callsign'])
+        self.sqd.insert(0, Config().get()['Default']['sqd'])
+        self.cs.insert(0, Config().get()['Default']['cs'])
         self.aor.insert(0, Config().get()['Default']['aor'])
 
     def verify_data(self):
-        defaults = ['filesdirectory', 'databasedirectory', 'server', 'squadron', 'callsign', 'aor']
+        defaults = ['filesdirectory', 'databasedirectory', 'server', 'sqd', 'cs', 'aor']
         return all(c.get() == d for c, d in
                    zip(self.configs, [Config().get()['Default'][default] for default in defaults]))
 
@@ -1420,8 +1281,8 @@ class GUI(object):
         self.main.mainloop()
 
     def contruct(self):
-        self.main.title('ADIT v{}'.format(Config().get()['Default']['version']
-                                          if os.path.isdir('C:\EWDS-DIA') else 'UNKNOWN'))
+        self.main.title('Tool v{}'.format(Config().get()['Default']['version']
+                                          if os.path.isdir('C:\path\to\dir') else 'UNKNOWN'))
         self.main.geometry("720x250")
         self.main.resizable(False, False)
 
@@ -1463,7 +1324,7 @@ class GUI(object):
         ToolTip(export, "Write All Selected Files to '.csv' Files")
 
         upload = Button(mainframe, text='Upload', command=lambda: self.thread_func(self.upload_data))
-        ToolTip(upload, "Upload All Selected Files to Associated GALE PostgreSQL Database")
+        ToolTip(upload, "Upload All Selected Files to Associated PostgreSQL Database")
 
         frame = Frame(mainframe)
 
@@ -1543,7 +1404,7 @@ class GUI(object):
         self.missions = {}
 
         for index, file in enumerate(files):
-            if 'EWDS' in file and 'Lite' in file:
+            if 'Other' in file and 'Type' in file:
                 Handler().show_error("Data Type Error", "'{}' is an EOB File, not Mission Data File.".format(file))
                 continue
             self.statusbar.set("Generating Data Characteristics for {}...".format(file.split('/')[-1]))
@@ -1554,20 +1415,20 @@ class GUI(object):
         self.statusbar.clear()
 
     def generate_file_name(self, mission):
-        return "{}_{}_{}_{}{}{}_{}_S".format(mission.date, Config().get()['Default']['squadron'],
-                                             Config().get()['Default']['callsign'], mission.start_time,
+        return "{}_{}_{}_{}{}{}_{}_S".format(mission.date, Config().get()['Default']['sqd'],
+                                             Config().get()['Default']['cs'], mission.start_time,
                                              mission.stop_time, mission.buno, Config().get()['Default']['aor'])
 
     def update_defaults(self, path):
         name = path.split('/')[-1]
         values = name.split('_')
 
-        squadron = values[1]
-        callsign = values[2]
+        sqd = values[1]
+        cs = values[2]
         aor = values[4]
 
-        Config().save('Default', 'squadron', squadron)
-        Config().save('Default', 'callsign', callsign)
+        Config().save('Default', 'sqd', sqd)
+        Config().save('Default', 'cs', cs)
         Config().save('Default', 'aor', aor)
 
     def write_data(self):
@@ -1617,7 +1478,7 @@ class GUI(object):
             rows = mission.read(1024 * 1024)
             with StringIO() as outfile:
                 with tqdm(total=mission.size, unit='bytes', unit_scale=True, file=outfile) as tq:
-                    db = PostgresqlDatabase('aea_aef_data_table')
+                    db = PostgresqlDatabase('table')
                     while rows:
                         try:
                             db.upload(next(rows))
@@ -1633,9 +1494,9 @@ class GUI(object):
                             self.item_vars['label{}'.format(index)].set('Upload Finished.')
                             self.statusbar.set('Deleting database duplicate entries...')
                             break
-
-                    self.statusbar.clear()
+                            
                     db.delete_duplicates()
+                    self.statusbar.clear()
 
     def _exit(self):
         try:
